@@ -50,3 +50,28 @@ class ShellParserTest(unittest.TestCase):
     comments = shell_parser.extract_comments(code)
     expected = [common.Comment(code[3:], 1, multiline=False)]
     self.assertEqual(comments, expected)
+
+  def testHereDoc(self):
+    code = '''cat << This_shall_be_my_string_delimiter_now
+    # this is not a comment
+    echo This_shall_be_my_string_delimiter_now'''
+    comments = shell_parser.extract_comments(code)
+    self.assertEqual(comments, [])
+
+  def testCommentedHereDoc(self):
+    code = '''# cat << This_shall_be_my_string_delimiter_now
+    # this is a comment
+    echo This_shall_be_my_string_delimiter_now'''
+    comments = shell_parser.extract_comments(code)
+    expected = [
+      common.Comment(" cat << This_shall_be_my_string_delimiter_now", 1, multiline=False),
+      common.Comment(" this is a comment", 2, multiline=False)
+    ]
+    self.assertEqual(comments, expected)
+
+  def testQuotedHereDoc(self):
+    code = '''cat << 'This_shall_be_my_string_delimiter_now'
+    # this is not a comment
+    echo This_shall_be_my_string_delimiter_now'''
+    comments = shell_parser.extract_comments(code)
+    self.assertEqual(comments, [])
